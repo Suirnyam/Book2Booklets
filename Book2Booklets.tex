@@ -1,0 +1,120 @@
+\documentclass{article}
+\usepackage{pdfpages, pgffor, pdftexcmds, pgfmath}
+
+
+
+
+\begin{document}
+\pagenumbering{gobble}
+
+
+
+
+
+
+\def\pdffilepath{inputfile.pdf}
+\pdfximage{\pdffilepath}
+\def\numberofpages{\the\pdflastximagepages}
+\newcommand{\numPagesPerBooklet}{20}  % Number of pages per booklet
+
+\pgfmathtruncatemacro{\pocetSvazku}{ceil(\numberofpages / \numPagesPerBooklet)}
+\pgfmathtruncatemacro{\pocetCelych}{\numberofpages / \numPagesPerBooklet}
+
+\newcommand{\numBooklets}{\pocetCelych}          % Number of booklets
+
+\pgfmathtruncatemacro{\zbyvajici}{\numberofpages - \numBooklets * \numPagesPerBooklet}
+\pgfmathtruncatemacro{\strankyPosledni}{max(8, ceil(\zbyvajici / 4) * 4)}
+\pgfmathtruncatemacro{\startposledni}{\numBooklets * \numPagesPerBooklet+1}
+\pgfmathtruncatemacro{\konecposledni}{\numBooklets * \numPagesPerBooklet + \strankyPosledni}
+
+
+
+
+
+\def\bookletSequence{}  % Initialize sequence
+
+% Loop through each booklet
+\foreach \bookletNum in {0,...,\numexpr\numBooklets-1\relax} {
+  % Calculate starting page for the current booklet
+  \pgfmathtruncatemacro{\startPage}{\bookletNum * \numPagesPerBooklet + 1}
+  
+  % Loop through half of the pages in the booklet
+  \foreach \i in {0,...,\numexpr\numPagesPerBooklet/2-1\relax} {
+    % Calculate front and back pages
+    \pgfmathtruncatemacro{\frontPage}{\startPage + \numPagesPerBooklet - 1 - \i}
+    \pgfmathtruncatemacro{\backPage}{\startPage + \i}
+    
+    % Append to booklet sequence
+    \xdef\bookletSequence{\bookletSequence \frontPage, \backPage,} %ta čarka sice způsobuje lamentace, ale je nutná!!!!
+  }
+}
+
+
+\foreach \ich in {0,...,\numexpr\strankyPosledni/2-1\relax} {
+    \pgfmathtruncatemacro{\frontPagelast}{\startposledni + \strankyPosledni - 1 - \ich}
+    \pgfmathtruncatemacro{\backPagelast}{\startposledni + \ich}
+    \xdef\bookletSequence{\bookletSequence \frontPagelast, \backPagelast,} 
+    }
+    
+    
+% Booklet sequence: \bookletSequence
+
+
+\foreach \npage in \bookletSequence {
+  \ifnum\npage>\numberofpages
+    {\ \newpage}
+    \else
+    \includepdf[pages={\npage}]{inputfile.pdf}
+    \fi
+}
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+% Define the parameters
+% \newcommand{\numPages}{100}            % Total number of pages
+% \newcommand{\pagesPerBooklet}{20}      % Pages per booklet
+
+% % Initialize variables
+% \newcounter{startPage}
+% \setcounter{startPage}{1}
+% \newcounter{endPage}
+% \setcounter{endPage}{\numPages}
+% \newcounter{increment}
+% \setcounter{increment}{\pagesPerBooklet}
+
+% % Initialize sequence list
+% \def\bookletSequence{}
+
+% % Loop until all pages are processed
+% \loop
+%   % Loop through half of the pages in a booklet
+%   \foreach \i in {0,...,\numexpr\pagesPerBooklet/2-1\relax} {
+%     % Calculate front and back pages
+%     \pgfmathtruncatemacro{\frontPage}{\thestartPage + \i}
+%     \pgfmathtruncatemacro{\backPage}{\theendPage - \i}
+%     % Append front and back pages to sequence list
+%     \xdef\bookletSequence{\bookletSequence \frontPage, \backPage, }
+%   }
+%   % Move to the next booklet
+%   \addtocounter{startPage}{\theincrement}
+%   \addtocounter{endPage}{-\theincrement}
+%   % Continue loop if startPage is less than endPage
+%   \ifnum\thestartPage<\theendPage
+% \repeat
+
+% % Output the booklet sequence
+% Booklet sequence: \bookletSequence
+
+
+
